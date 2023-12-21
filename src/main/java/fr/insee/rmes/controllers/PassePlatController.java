@@ -2,16 +2,13 @@ package fr.insee.rmes.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.context.request.ServletWebRequest;
-import org.springframework.web.context.request.WebRequest;
+
+import java.util.Optional;
 
 @RestController
 public record PassePlatController(RestClient restClient) {
@@ -21,13 +18,11 @@ public record PassePlatController(RestClient restClient) {
         this(RestClient.builder().baseUrl(bauhausBackOfficeUrl).build());
     }
 
-    @RequestMapping("/**")
-    public ResponseEntity<String> allRequest(HttpMethod method, ServletWebRequest request, HttpEntity<?> httpEntityRequest){
-        var path=request.getRequest().getRequestURI();
-        var response=addBody(restClient.method(method).uri(path), httpEntityRequest)
+    @RequestMapping("/{*path}")
+    public ResponseEntity<String> allRequest(HttpMethod method, @PathVariable String path, @RequestHeader HttpHeaders requestHeaders, @RequestBody Optional<String> body){
+        var response=addBody(restClient.method(method).uri(path), body)
                 .headers(headers->{
                     headers.clear();
-                    HttpHeaders requestHeaders = httpEntityRequest.getHeaders();
                     headers.addAll(requestHeaders);
                     headers.remove(HttpHeaders.CONTENT_LENGTH);
                 })
@@ -38,8 +33,8 @@ public record PassePlatController(RestClient restClient) {
                 .body(responseEntity.getBody());
     }
 
-    private RestClient.RequestBodySpec addBody(RestClient.RequestBodySpec requestBodySpec, HttpEntity<?> httpEntity) {
-        return httpEntity.hasBody()?requestBodySpec.body(httpEntity.getBody()):requestBodySpec;
+    private RestClient.RequestBodySpec addBody(RestClient.RequestBodySpec requestBodySpec, Optional<String> body) {
+        return body.map(requestBodySpec::body).orElse(requestBodySpec);
     }
 
 }
