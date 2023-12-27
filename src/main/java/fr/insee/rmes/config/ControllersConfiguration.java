@@ -10,7 +10,7 @@ import org.springframework.beans.factory.support.ReplaceOverride;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.stereotype.Component;
 
-//@Component
+@Component
 public class ControllersConfiguration {
 
     @Autowired

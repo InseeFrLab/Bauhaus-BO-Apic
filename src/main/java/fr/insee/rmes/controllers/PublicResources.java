@@ -11,13 +11,13 @@ public interface PublicResources {
     @GetMapping(value = "/init", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Object> getProperties() ;
 
-/*    @GetMapping(value = "/stamps", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/stamps", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Object> getStamps();
 
     @GetMapping(value = "/disseminationStatus", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Object> getDisseminationStatus();
 
     @GetMapping(value = "/roles", produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<Object> getRoles();*/
+    ResponseEntity<Object> getRoles();
 }
 

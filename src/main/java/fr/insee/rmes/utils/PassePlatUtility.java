@@ -12,19 +12,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 
-import static java.util.Optional.ofNullable;
+import static java.util.Objects.requireNonNull;
 
 @Service
 @Slf4j
 public record PassePlatUtility(RestClient restClient) {
 
-    //@Autowired
-    public PassePlatUtility(/*@Value("${fr.insee.rmes.apic.bauhaus-bo.url}") String bauhausBackOfficeUrl*/) {
-        this(RestClient.builder().baseUrl("https://gestion-metadonnees-api.developpement.insee.fr/").build());
+    @Autowired
+    public PassePlatUtility(@Value("${fr.insee.rmes.apic.bauhaus-bo.url}") String bauhausBackOfficeUrl) {
+        this(RestClient.builder().baseUrl(bauhausBackOfficeUrl).build());
     }
 
     //@CrossOrigin(origins = "${fr.insee.rmes.apic.cors.allowed-origins}")
@@ -33,13 +32,13 @@ public record PassePlatUtility(RestClient restClient) {
         log.atDebug().log(() -> "Process " + method + " " + path + " [" + requestHeaders.keySet() + "] with body.length = " + body.orElse("").length());
         var normalizedPath = normalizedPath(path);
         try {
-            var remoteResponse = addBody(restClient.method(method).uri(normalizedPath), body)
+            addBody(restClient.method(method).uri(normalizedPath), body)
                     .headers(headers -> {
                         headers.clear();
                         headers.addAll(requestHeaders);
                         headers.remove(HttpHeaders.CONTENT_LENGTH);
                     })
-                    /*.exchange((request, response) -> {
+                    .exchange((request, response) -> {
                         try {
                             responseEntityBuilder.setStatus(response.getStatusCode())
                                     .setHeaders(cloneRemoving(response.getHeaders(),
@@ -51,25 +50,17 @@ public record PassePlatUtility(RestClient restClient) {
                             return "error";
                         }
                         return "complete";
-                    });*/
-                    .retrieve()
-                    .toEntity(String.class);
-            responseEntityBuilder.setStatus(remoteResponse.getStatusCode());
-            responseEntityBuilder.setHeaders(cloneRemoving(remoteResponse.getHeaders(),
-                    HttpHeaders.CONTENT_LENGTH,
-                    HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
-            responseEntityBuilder.setBody(remoteResponse.getBody());
+                    });
 
         } catch (Exception e) {
             processLogError(method, normalizedPath, e, responseEntityBuilder);
-            responseEntityBuilder.setStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+            responseEntityBuilder.setStatus(HttpStatus.SERVICE_UNAVAILABLE)
                     .setBody("Error for Api consultation")
                     .setHeaders(new HttpHeaders());
         }
-        log.info("SEND RESPONSE : "+responseEntityBuilder);
-        log.info(Arrays.stream(Thread.currentThread().getStackTrace()).map(StackTraceElement::toString).reduce((a,b)->a+"\n"+b).get());
-
+        log.debug("SEND RESPONSE : {}", responseEntityBuilder);
         return responseEntityBuilder.build();
+
     }
 
     private HttpHeaders cloneRemoving(HttpHeaders headers, String... headerNamesToRemove) {
@@ -97,33 +88,37 @@ public record PassePlatUtility(RestClient restClient) {
     @ToString
     private class ResponseEntityBuilder<T> {
 
-        private Optional<HttpStatusCode> status;
-        private Optional<T> body;
-        private Optional<HttpHeaders> headers;
+        private HttpStatusCode status;
+        private T body;
+        private HttpHeaders headers;
 
         public ResponseEntityBuilder() {
-            this(Optional.empty(), Optional.empty(), Optional.empty());
+            this(null, null, null);
         }
 
         public ResponseEntityBuilder<T> setStatus(@NonNull HttpStatusCode status) {
-            this.status = Optional.of(status);
+            this.status = status;
             return this;
         }
 
         public ResponseEntityBuilder<T> setHeaders(@NonNull HttpHeaders headers) {
-            this.headers = Optional.of(headers);
+            this.headers = headers;
             return this;
         }
 
         public ResponseEntityBuilder<T> setBody(@Nullable T body) {
-            this.body = ofNullable(body);
+            this.body = body;
             return this;
         }
 
         public ResponseEntity<T> build() {
-            var retour = ResponseEntity.status(this.status.get()).headers(headers.get());
-            this.body.ifPresent(retour::body);
-            return retour.build();
+            var statusReturned=requireNonNull(this.status);
+            T bodyReturned=statusReturned==HttpStatus.NO_CONTENT?
+                    this.body:
+                    requireNonNull(this.body);
+            return ResponseEntity.status(statusReturned)
+                    .headers(requireNonNull(this.headers))
+                    .body(bodyReturned);
         }
 
     }
