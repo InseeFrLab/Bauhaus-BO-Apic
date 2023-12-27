@@ -18,7 +18,7 @@ public record EndPointMethodReplacer(@Autowired PassePlatUtility passePlatUtilit
                                      /*,@Autowired HttpServletResponse webResponse*/) implements MethodReplacer {
     @Override
     public Object reimplement(Object obj, Method method, Object[] args) throws Throwable {
-        log.info("REQUEST : {}\nhashCode : {}",webRequest,webRequest.hashCode());
+        log.info("REQUEST : {}",webRequest);
         Optional<String> body=webRequest.getReader().lines().reduce((a, b)->a+"\n"+b);
         HttpHeaders headers=headers(webRequest);
         return passePlatUtility.allRequest(HttpMethod.valueOf(webRequest.getMethod()),webRequest.getServletPath(), headers,body);
@@ -26,9 +26,7 @@ public record EndPointMethodReplacer(@Autowired PassePlatUtility passePlatUtilit
 
     private HttpHeaders headers(HttpServletRequest webRequest) {
         var retour=new HttpHeaders();
-        webRequest.getHeaderNames().asIterator().forEachRemaining(name->{
-            retour.add(name, webRequest.getHeader(name));
-        });
+        webRequest.getHeaderNames().asIterator().forEachRemaining(name-> retour.add(name, webRequest.getHeader(name)));
         return retour;
     }
 }

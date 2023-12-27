@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 
@@ -21,13 +22,13 @@ import static java.util.Optional.ofNullable;
 @Slf4j
 public record PassePlatUtility(RestClient restClient) {
 
-    @Autowired
-    public PassePlatUtility(@Value("${fr.insee.rmes.apic.bauhaus-bo.url}") String bauhausBackOfficeUrl) {
-        this(RestClient.builder().baseUrl(bauhausBackOfficeUrl).build());
+    //@Autowired
+    public PassePlatUtility(/*@Value("${fr.insee.rmes.apic.bauhaus-bo.url}") String bauhausBackOfficeUrl*/) {
+        this(RestClient.builder().baseUrl("https://gestion-metadonnees-api.developpement.insee.fr/").build());
     }
 
     //@CrossOrigin(origins = "${fr.insee.rmes.apic.cors.allowed-origins}")
-    public ResponseEntity<String> allRequest(@NonNull HttpMethod method, /*@NonNull*/ String path, @NonNull HttpHeaders requestHeaders, @NonNull Optional<String> body) {
+    public ResponseEntity<String> allRequest(@NonNull HttpMethod method, @NonNull String path, @NonNull HttpHeaders requestHeaders, @NonNull Optional<String> body) {
         final ResponseEntityBuilder<String> responseEntityBuilder = new ResponseEntityBuilder<>();
         log.atDebug().log(() -> "Process " + method + " " + path + " [" + requestHeaders.keySet() + "] with body.length = " + body.orElse("").length());
         var normalizedPath = normalizedPath(path);
@@ -54,7 +55,9 @@ public record PassePlatUtility(RestClient restClient) {
                     .retrieve()
                     .toEntity(String.class);
             responseEntityBuilder.setStatus(remoteResponse.getStatusCode());
-            responseEntityBuilder.setHeaders(cloneRemoving(remoteResponse.getHeaders()));
+            responseEntityBuilder.setHeaders(cloneRemoving(remoteResponse.getHeaders(),
+                    HttpHeaders.CONTENT_LENGTH,
+                    HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
             responseEntityBuilder.setBody(remoteResponse.getBody());
 
         } catch (Exception e) {
@@ -63,7 +66,8 @@ public record PassePlatUtility(RestClient restClient) {
                     .setBody("Error for Api consultation")
                     .setHeaders(new HttpHeaders());
         }
-        log.atDebug().log(()->"SEND RESPONSE : "+responseEntityBuilder);
+        log.info("SEND RESPONSE : "+responseEntityBuilder);
+        log.info(Arrays.stream(Thread.currentThread().getStackTrace()).map(StackTraceElement::toString).reduce((a,b)->a+"\n"+b).get());
 
         return responseEntityBuilder.build();
     }

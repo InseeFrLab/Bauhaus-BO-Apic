@@ -1,6 +1,5 @@
-package fr.insee.rmes.controllers;
+package fr.insee.rmes.utils;
 
-import fr.insee.rmes.utils.PassePlatUtility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -25,7 +24,7 @@ class PassePlatControllerTest {
     @DisplayName("Test process of URI by Spring framework")
     void testNormalizedPathForUris(String badUri){
         UriComponentsBuilder baseUri=UriComponentsBuilder.fromUriString(BASE_URI);
-        var passePlatController=new PassePlatUtility(BASE_URI);
+        var passePlatController=new PassePlatUtility(/*BASE_URI*/);
         URI uriResult = springComputationOfUri(passePlatController.normalizedPath(badUri), baseUri);
         Assertions.assertEquals(java.net.URI.create(BASE_URI+(("/"+badUri).replace("//","/").replace("//","/"))), uriResult);
     }

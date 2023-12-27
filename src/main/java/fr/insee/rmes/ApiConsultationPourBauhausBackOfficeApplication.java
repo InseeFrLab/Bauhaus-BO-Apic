@@ -6,7 +6,6 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @SpringBootApplication
-@EnableWebMvc
 public class ApiConsultationPourBauhausBackOfficeApplication {
 
 	public static void main(String[] args) {

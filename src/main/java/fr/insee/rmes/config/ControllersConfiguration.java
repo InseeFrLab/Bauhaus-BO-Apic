@@ -3,7 +3,6 @@ package fr.insee.rmes.config;
 import fr.insee.rmes.controllers.PublicResources;
 import fr.insee.rmes.utils.EndPointMethodReplacer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.MethodOverrides;
@@ -11,8 +10,7 @@ import org.springframework.beans.factory.support.ReplaceOverride;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.stereotype.Component;
 
-@Component
-@Configurable
+//@Component
 public class ControllersConfiguration {
 
     @Autowired
