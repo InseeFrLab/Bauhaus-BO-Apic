@@ -113,12 +113,16 @@ public record PassePlatUtility(RestClient restClient) {
 
         public ResponseEntity<T> build() {
             var statusReturned=requireNonNull(this.status);
-            T bodyReturned=statusReturned==HttpStatus.NO_CONTENT?
+            T bodyReturned= isBodyNullable(statusReturned) ?
                     this.body:
                     requireNonNull(this.body);
             return ResponseEntity.status(statusReturned)
                     .headers(requireNonNull(this.headers))
                     .body(bodyReturned);
+        }
+
+        private static boolean isBodyNullable(HttpStatusCode statusReturned) {
+            return statusReturned == HttpStatus.NO_CONTENT || statusReturned.is4xxClientError();
         }
 
     }
