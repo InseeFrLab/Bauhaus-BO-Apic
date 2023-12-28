@@ -1,4 +1,4 @@
-package fr.insee.rmes.controllers;
+package fr.insee.rmes.bauhauscontrollers;
 
 import fr.insee.rmes.model.Indicator;
 import org.springframework.http.MediaType;
@@ -19,7 +19,7 @@ public interface IndicatorsResources {
 
     @GetMapping(value = "/indicator/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     ResponseEntity<Object> getIndicatorByID(@PathVariable("id") String id,
-                                            @RequestHeader(required = false) String accept);
+                                            @RequestHeader(name="accept", required = false) String accept);
 
     //@PreAuthorize("hasAnyRole(T(fr.insee.rmes.config.auth.roles.Roles).ADMIN , T(fr.insee.rmes.config.auth.roles.Roles).INDICATOR_CONTRIBUTOR)")
     @PutMapping(value = "/indicator/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)

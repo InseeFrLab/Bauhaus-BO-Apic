@@ -1,4 +1,4 @@
-package fr.insee.rmes.controllers;
+package fr.insee.rmes.othercontrollers;
 
 import fr.insee.rmes.utils.PassePlatUtility;
 import org.springframework.http.HttpHeaders;

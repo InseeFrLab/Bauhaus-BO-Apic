@@ -1,10 +1,12 @@
-package fr.insee.rmes.controllers;
+package fr.insee.rmes.bauhauscontrollers.geography;
 
 import fr.insee.rmes.model.GeoFeature;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@RestController
+@RequestMapping("/geo")
 public interface GeographyResources {
     @GetMapping(value = "/territories", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<GeoFeature> getGeoFeatures() ;

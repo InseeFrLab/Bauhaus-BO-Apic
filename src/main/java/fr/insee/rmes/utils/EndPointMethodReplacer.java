@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.support.MethodReplacer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -20,9 +19,9 @@ import java.util.Optional;
 
 
 @Slf4j
-public record EndPointMethodReplacer(@Autowired PassePlatUtility passePlatUtility,
-                                     @Autowired HttpServletRequest webRequest
-        /*@Autowired ContentCachingRequestWrapper contentCachingRequestWrapper*/) implements MethodReplacer {
+public record EndPointMethodReplacer(PassePlatUtility passePlatUtility, HttpServletRequest webRequest) implements MethodReplacer {
+
+
     @Override
     public Object reimplement(Object obj, Method method, Object[] args) {
         log.debug("REQUEST : {} : {} {}", webRequest, webRequest.getMethod(), webRequest.getServletPath());

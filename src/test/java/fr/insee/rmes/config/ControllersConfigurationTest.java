@@ -2,20 +2,26 @@ package fr.insee.rmes.config;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.ScannedGenericBeanDefinition;
+import org.springframework.core.type.MethodMetadata;
+import org.springframework.core.type.classreading.SimpleMetadataReaderFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.lang.reflect.Method;
+import java.io.IOException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 class ControllersConfigurationTest {
 
     @Test
-    void findEndpointMethodsTest() {
-        var expected= Set.of("endpointDelete", "endpointPut", "endpointPost", "endpoint3", "endpoint2", "endpoint1");
+    void findEndpointMethodsTest() throws IOException {
+        var expected = Set.of("endpointDelete", "endpointPut", "endpointPost", "endpoint3", "endpoint2", "endpoint1");
+
+        ScannedGenericBeanDefinition testEndpointsMetadata =
+                new ScannedGenericBeanDefinition((new SimpleMetadataReaderFactory()).getMetadataReader(TestEndPoints.class.getName()));
         Assertions.assertEquals(expected,
-                ControllersConfiguration.findEndpointMethods(TestEndPoints.class).map(Method::getName).collect(Collectors.toSet()));
+                ControllersConfiguration.findEndpointMethods(testEndpointsMetadata).map(MethodMetadata::getMethodName).collect(Collectors.toSet()));
 
     }
 
@@ -51,7 +57,8 @@ class ControllersConfigurationTest {
         ResponseEntity<?> endpointPut();
 
         @DeleteMapping
-        default void endpointDelete(){}
+        default void endpointDelete() {
+        }
     }
 
 }
