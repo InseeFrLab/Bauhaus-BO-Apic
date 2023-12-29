@@ -26,7 +26,6 @@ public record PassePlatUtility(RestClient restClient) {
         this(RestClient.builder().baseUrl(bauhausBackOfficeUrl).build());
     }
 
-    //@CrossOrigin(origins = "${fr.insee.rmes.apic.cors.allowed-origins}")
     public ResponseEntity<String> allRequest(@NonNull HttpMethod method, @NonNull String path, @NonNull HttpHeaders requestHeaders, @NonNull Optional<String> body) {
         final ResponseEntityBuilder<String> responseEntityBuilder = new ResponseEntityBuilder<>();
         log.atDebug().log(() -> "Process " + method + " " + path + " [" + requestHeaders.keySet() + "] with body.length = " + body.orElse("").length());
@@ -112,9 +111,9 @@ public record PassePlatUtility(RestClient restClient) {
         }
 
         public ResponseEntity<T> build() {
-            var statusReturned=requireNonNull(this.status);
-            T bodyReturned= isBodyNullable(statusReturned) ?
-                    this.body:
+            var statusReturned = requireNonNull(this.status);
+            T bodyReturned = isBodyNullable(statusReturned) ?
+                    this.body :
                     requireNonNull(this.body);
             return ResponseEntity.status(statusReturned)
                     .headers(requireNonNull(this.headers))
