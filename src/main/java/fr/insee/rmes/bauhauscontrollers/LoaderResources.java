@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/loader")
 public interface LoaderResources {
-    @PreAuthorize("hasAnyRole(T(fr.insee.rmes.config.auth.roles.Roles).ADMIN)")
+    //@PreAuthorize("hasAnyRole(T(fr.insee.rmes.config.auth.roles.Roles).ADMIN)")
     @PostMapping(value = "/upload/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<Object> uploadRdf(
             @RequestPart(value = "database") String database,
@@ -19,7 +19,7 @@ public interface LoaderResources {
     @GetMapping(value = "/download/graph", produces = "*/*")
     ResponseEntity<Object> downloadDocument(@RequestBody String urlGraph, @RequestBody String database);
 
-    @PreAuthorize("hasAnyRole(T(fr.insee.rmes.config.auth.roles.Roles).ADMIN)")
+    //@PreAuthorize("hasAnyRole(T(fr.insee.rmes.config.auth.roles.Roles).ADMIN)")
     @GetMapping(value = "/download/graphs", produces = "*/*")
     ResponseEntity<Object> downloadDocument(@RequestBody LoaderResources database);
 

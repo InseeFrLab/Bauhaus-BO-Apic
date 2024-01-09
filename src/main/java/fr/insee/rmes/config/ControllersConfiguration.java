@@ -40,17 +40,36 @@ public class ControllersConfiguration implements ApplicationListener<Application
         genericApplicationContext.registerBean(replacerBeanName, EndPointMethodReplacer.class);
 
         controllerInterfacesForEndpointImplementation().forEach(
-                clazz -> lookupEnpointsImplementation(clazz, genericApplicationContext, replacerBeanName)
+                beanDefinition -> lookupEnpointsImplementation(beanDefinition, genericApplicationContext, replacerBeanName)
         );
 
     }
 
 
     private void lookupEnpointsImplementation(ScannedGenericBeanDefinition genericBeanDefinition, GenericApplicationContext genericApplicationContext, String replacerBeanName) {
-        log.debug("Instanciation of interface controller {} as a bean", genericBeanDefinition.getBeanClassName());
+        log.debug("Declaration of interface controller {} as a bean", genericBeanDefinition.getBeanClassName());
 
-        genericBeanDefinition.setLazyInit(true);
+        /*
+        ScannedGenericBeanDefinition(MetadataReader metadataReader)
+		  this.metadata = metadataReader.getAnnotationMetadata();
+		  setBeanClassName(this.metadata.getClassName());
+		  setResource(metadataReader.getResource());
+         */
+        /*default values to keep :
+          genericBeanDefinition.setAbstract(false);
+         */
+        /*Unused properties :
+          genericBeanDefinition.setOriginatingBeanDefinition();
+          genericBeanDefinition.setParentName();
+         */
+        /*
+        Errors :
+          genericBeanDefinition.getBeanClass() => java.lang.IllegalStateException: Bean class name [fr.insee.rmes.bauhauscontrollers....] has not been resolved into an actual Class
+         */
+        genericBeanDefinition.setLazyInit(false);
         genericBeanDefinition.setScope(BeanDefinition.SCOPE_SINGLETON);
+        //the bean must not be synthetic because if it is, AbstractAutowireCapableBeanFactory.initializeBean does not call `applyBeanPostProcessorsAfterInitialization()`
+        genericBeanDefinition.setSynthetic(false);
         var methodOverrides = new MethodOverrides();
         findEndpointMethods(genericBeanDefinition)
                 .map(MethodMetadata::getMethodName)

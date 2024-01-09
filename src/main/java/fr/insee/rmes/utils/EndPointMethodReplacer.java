@@ -76,7 +76,7 @@ public record EndPointMethodReplacer(PassePlatUtility passePlatUtility, HttpServ
 
     private Optional<String> readContentBodyFromArguments(Method method, Object[] args) throws JsonProcessingException {
         var indexOfArgumentWithBody = findIndexOfArgumentWithBody(method);
-        if (0 < indexOfArgumentWithBody && indexOfArgumentWithBody < args.length) {
+        if (0 <= indexOfArgumentWithBody && indexOfArgumentWithBody < args.length) {
             return Optional.of(serialize(args[indexOfArgumentWithBody]));
         }
         return Optional.empty();
