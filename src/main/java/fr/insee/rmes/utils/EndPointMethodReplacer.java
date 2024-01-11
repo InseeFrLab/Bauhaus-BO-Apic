@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.beans.factory.support.MethodReplacer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -19,8 +21,21 @@ import java.util.Optional;
 
 
 @Slf4j
-public record EndPointMethodReplacer(PassePlatUtility passePlatUtility, HttpServletRequest webRequest) implements MethodReplacer {
+public record EndPointMethodReplacer(PassePlatUtility passePlatUtility, HttpServletRequest webRequest) implements MethodReplacer, MethodInterceptor {
 
+
+    @Override
+    public Object invoke(MethodInvocation invocation) {
+        log.debug("REQUEST : {} : {} {} BY AOP", webRequest, webRequest.getMethod(), webRequest.getServletPath());
+        try {
+            Optional<String> body = readBody(webRequest, invocation.getMethod(), invocation.getArguments());
+            HttpHeaders headers = headers(webRequest);
+            return passePlatUtility.allRequest(HttpMethod.valueOf(webRequest.getMethod()), webRequest.getServletPath(), headers, body);
+        } catch (IOException e) {
+            log.error("While preparing request {} {} for remote call", webRequest.getMethod(), webRequest.getServletPath(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
     @Override
     public Object reimplement(Object obj, Method method, Object[] args) {
@@ -116,4 +131,6 @@ public record EndPointMethodReplacer(PassePlatUtility passePlatUtility, HttpServ
         webRequest.getHeaderNames().asIterator().forEachRemaining(name -> retour.add(name, webRequest.getHeader(name)));
         return retour;
     }
+
+
 }

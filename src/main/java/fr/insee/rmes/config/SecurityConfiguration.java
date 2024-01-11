@@ -94,12 +94,12 @@ public class SecurityConfiguration {
         UserDetails user = User.withDefaultPasswordEncoder()
                 .username("user")
                 .password("password")
-                .roles(Roles.CONCEPT_CONTRIBUTOR)
+                .authorities(Roles.CONCEPT_CONTRIBUTOR)
                 .build();
         UserDetails admin = User.withDefaultPasswordEncoder()
                 .username("admin")
                 .password("password")
-                .roles(Roles.ADMIN)
+                .authorities(Roles.ADMIN)
                 .build();
         return new InMemoryUserDetailsManager(user, admin);
     }

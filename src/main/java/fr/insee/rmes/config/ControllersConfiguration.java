@@ -1,7 +1,10 @@
 package fr.insee.rmes.config;
 
+import fr.insee.rmes.utils.ClassificationsResources;
 import fr.insee.rmes.utils.EndPointMethodReplacer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.MethodOverrides;
@@ -21,7 +24,7 @@ import java.util.stream.Stream;
 
 
 @Slf4j
-public class ControllersConfiguration implements ApplicationListener<ApplicationContextInitializedEvent> {
+public class ControllersConfiguration implements ApplicationListener<ApplicationContextInitializedEvent>{
 
     public static final String INTERFACE_CONTROLLERS_PACKAGE_KEY="fr.insee.rmes.interface-controllers.package";
 
@@ -34,7 +37,7 @@ public class ControllersConfiguration implements ApplicationListener<Application
     @Override
     public void onApplicationEvent(ApplicationContextInitializedEvent event) {
         GenericApplicationContext genericApplicationContext= (GenericApplicationContext) event.getApplicationContext();
-        interfaceControllerPackage=event.getApplicationContext().getEnvironment().getProperty(INTERFACE_CONTROLLERS_PACKAGE_KEY);
+        interfaceControllerPackage=genericApplicationContext.getEnvironment().getProperty(INTERFACE_CONTROLLERS_PACKAGE_KEY);
 
         var replacerBeanName = "endPointMethodReplacer";
         genericApplicationContext.registerBean(replacerBeanName, EndPointMethodReplacer.class);
@@ -43,6 +46,24 @@ public class ControllersConfiguration implements ApplicationListener<Application
                 beanDefinition -> lookupEnpointsImplementation(beanDefinition, genericApplicationContext, replacerBeanName)
         );
 
+        /*var beanDefinition= BeanDefinitionBuilder.genericBeanDefinition(ClassificationsResources.class)
+                .setLazyInit(false)
+                .setScope(BeanDefinition.SCOPE_SINGLETON)
+                .getBeanDefinition();
+
+        var methodOverrides=new MethodOverrides();
+        methodOverrides.addOverride(new ReplaceOverride("updateClassification", replacerBeanName));
+        beanDefinition.setMethodOverrides(methodOverrides);*/
+        var resourceFactory=new ProxyFactoryBean();
+        var methodName="updateClassification";
+        var advisorName=ClassificationsResources.class.getCanonicalName()+"_"+methodName+"_replacer";
+        genericApplicationContext.registerBean(advisorName,NameMatchEnpointMethodPointcutAdvisor.class);
+        resourceFactory.setSingleton(true);
+        //resourceFactory.setTargetClass(ClassificationsResources.class);
+        resourceFactory.setInterfaces(ClassificationsResources.class);
+        //resourceFactory.addAdvisor(methodReplacementAdvisor);
+        resourceFactory.setInterceptorNames(advisorName);
+        genericApplicationContext.registerBean("toto",FactoryBean.class, ()->resourceFactory);
     }
 
 
@@ -67,6 +88,7 @@ public class ControllersConfiguration implements ApplicationListener<Application
           genericBeanDefinition.getBeanClass() => java.lang.IllegalStateException: Bean class name [fr.insee.rmes.bauhauscontrollers....] has not been resolved into an actual Class
          */
         genericBeanDefinition.setLazyInit(false);
+
         genericBeanDefinition.setScope(BeanDefinition.SCOPE_SINGLETON);
         //the bean must not be synthetic because if it is, AbstractAutowireCapableBeanFactory.initializeBean does not call `applyBeanPostProcessorsAfterInitialization()`
         genericBeanDefinition.setSynthetic(false);
