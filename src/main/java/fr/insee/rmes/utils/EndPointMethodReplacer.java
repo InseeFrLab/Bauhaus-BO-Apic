@@ -7,9 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.beans.factory.support.MethodReplacer;
+import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.io.BufferedReader;
@@ -19,9 +21,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Optional;
 
+import static org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_SINGLETON;
+
 
 @Slf4j
-public record EndPointMethodReplacer(PassePlatUtility passePlatUtility, HttpServletRequest webRequest) implements MethodReplacer, MethodInterceptor {
+@Component
+@Scope(SCOPE_SINGLETON)
+public record EndPointMethodReplacer(PassePlatUtility passePlatUtility, HttpServletRequest webRequest) implements MethodInterceptor {
 
 
     @Override
@@ -29,19 +35,6 @@ public record EndPointMethodReplacer(PassePlatUtility passePlatUtility, HttpServ
         log.debug("REQUEST : {} : {} {} BY AOP", webRequest, webRequest.getMethod(), webRequest.getServletPath());
         try {
             Optional<String> body = readBody(webRequest, invocation.getMethod(), invocation.getArguments());
-            HttpHeaders headers = headers(webRequest);
-            return passePlatUtility.allRequest(HttpMethod.valueOf(webRequest.getMethod()), webRequest.getServletPath(), headers, body);
-        } catch (IOException e) {
-            log.error("While preparing request {} {} for remote call", webRequest.getMethod(), webRequest.getServletPath(), e);
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    @Override
-    public Object reimplement(Object obj, Method method, Object[] args) {
-        log.debug("REQUEST : {} : {} {}", webRequest, webRequest.getMethod(), webRequest.getServletPath());
-        try {
-            Optional<String> body = readBody(webRequest, method, args);
             HttpHeaders headers = headers(webRequest);
             return passePlatUtility.allRequest(HttpMethod.valueOf(webRequest.getMethod()), webRequest.getServletPath(), headers, body);
         } catch (IOException e) {

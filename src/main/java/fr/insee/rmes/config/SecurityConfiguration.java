@@ -3,12 +3,10 @@ package fr.insee.rmes.config;
 import com.nimbusds.jose.shaded.gson.JsonArray;
 import com.nimbusds.jose.shaded.gson.JsonElement;
 import com.nimbusds.jose.shaded.gson.JsonObject;
-import fr.insee.rmes.config.auth.roles.Roles;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Role;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
@@ -19,12 +17,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -69,8 +63,7 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.sessionManagement(AbstractHttpConfigurer::disable)
-                //.oauth2ResourceServer(oauth2ResourceServer->oauth2ResourceServer.jwt(withDefaults()))
-                .httpBasic(withDefaults())
+                .oauth2ResourceServer(oauth2ResourceServer->oauth2ResourceServer.jwt(withDefaults()))
                 .cors(withDefaults())
                 .authorizeHttpRequests(
                         authorizeHttpRequest -> authorizeHttpRequest
@@ -90,36 +83,21 @@ public class SecurityConfiguration {
 
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user = User.withDefaultPasswordEncoder()
-                .username("user")
-                .password("password")
-                .authorities(Roles.CONCEPT_CONTRIBUTOR)
-                .build();
-        UserDetails admin = User.withDefaultPasswordEncoder()
-                .username("admin")
-                .password("password")
-                .authorities(Roles.ADMIN)
-                .build();
-        return new InMemoryUserDetailsManager(user, admin);
-    }
-
-    @Bean
     static GrantedAuthorityDefaults grantedAuthorityDefaults() {
         return new GrantedAuthorityDefaults(DEFAULT_ROLE_PREFIX);
     }
 
-//    @Bean
-//    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-//        var jwtAuthenticationConverter = new JwtAuthenticationConverter();
-//        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(this::extractAuthoritiesFromJwt);
-//        jwtAuthenticationConverter.setPrincipalClaimName(idClaim);
-//        return jwtAuthenticationConverter;
-//    }
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        var jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(this::extractAuthoritiesFromJwt);
+        jwtAuthenticationConverter.setPrincipalClaimName(idClaim);
+        return jwtAuthenticationConverter;
+    }
 
     private Collection<GrantedAuthority> extractAuthoritiesFromJwt(Jwt jwt) {
         return extractRoles(jwt.getClaims()).map(SimpleGrantedAuthority::new)
-                .map(a -> (GrantedAuthority) a).toList();
+                .map(GrantedAuthority.class::cast).toList();
     }
 
     private Stream<String> extractRoles(Map<String, Object> claims) {

@@ -1,4 +1,4 @@
-package fr.insee.rmes.utils;
+package fr.insee.rmes.bauhauscontrollers;
 
 import fr.insee.rmes.model.Classification;
 import org.springframework.http.ResponseEntity;
