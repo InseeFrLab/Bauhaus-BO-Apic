@@ -36,8 +36,6 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Slf4j
 public class SecurityConfiguration {
 
-    public static final String[] PUBLIC_RESOURCES_ANT_PATTERNS = {"/init", "/stamps", "/disseminationStatus", "/roles"};
-
     private static final Stream<String> EMPTY_ROLES = Stream.empty();
 
     public static final String DEFAULT_ROLE_PREFIX = "";
@@ -48,33 +46,33 @@ public class SecurityConfiguration {
 
     private final String idClaim;
     private final boolean disableCsrf;
+    private final String[] publicEndpoints;
 
 
-    public SecurityConfiguration(@Value("${jwt.role-claim}") String roleClaim,
+    public SecurityConfiguration(@Value("${jwt.role-claim.key}") String roleClaim,
                                  @Value("${jwt.role-claim.roles}") String keyForRolesInRoleClaim,
                                  @Value("${jwt.id-claim}") String idClaim,
-                                 @Value("${fr.insee.apic.security.csrf.disable:false}")boolean disableCsrf) {
+                                 @Value("${fr.insee.apic.security.csrf.disable:false}") boolean disableCsrf,
+                                 @Value("${fr.insee.apic.security.public-endpoints}") String[] publicEndpoints) {
         this.roleClaim = roleClaim;
         this.keyForRolesInRoleClaim = keyForRolesInRoleClaim;
         this.idClaim = idClaim;
         this.disableCsrf = disableCsrf;
+        this.publicEndpoints = publicEndpoints;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.sessionManagement(AbstractHttpConfigurer::disable)
-                .oauth2ResourceServer(oauth2ResourceServer->oauth2ResourceServer.jwt(withDefaults()))
+                .oauth2ResourceServer(oauth2ResourceServer -> oauth2ResourceServer.jwt(withDefaults()))
                 .cors(withDefaults())
                 .authorizeHttpRequests(
                         authorizeHttpRequest -> authorizeHttpRequest
-                                .requestMatchers(PUBLIC_RESOURCES_ANT_PATTERNS).permitAll()
-                                .requestMatchers("/documents/document/*/file").permitAll()
-                                .requestMatchers("/operations/operation/codebook").permitAll()
-                                .requestMatchers("/healthcheck").permitAll()
+                                .requestMatchers(publicEndpoints).permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS).permitAll()
                                 .anyRequest().authenticated()
                 );
-        if (this.disableCsrf){
+        if (this.disableCsrf) {
             http.csrf(AbstractHttpConfigurer::disable);
         }
         log.info("OpenID authentication activated ");
@@ -102,11 +100,11 @@ public class SecurityConfiguration {
 
     private Stream<String> extractRoles(Map<String, Object> claims) {
         var objectForRoles = (JsonObject) claims.get(roleClaim);
-        return switch (objectForRoles){
+        return switch (objectForRoles) {
             case null -> EMPTY_ROLES;
             default -> {
-                var jsonArray=(JsonArray) objectForRoles.get(keyForRolesInRoleClaim);
-                yield StreamSupport.stream(Spliterators.spliterator(jsonArray.iterator(), jsonArray.size(),0),false)
+                var jsonArray = (JsonArray) objectForRoles.get(keyForRolesInRoleClaim);
+                yield StreamSupport.stream(Spliterators.spliterator(jsonArray.iterator(), jsonArray.size(), 0), false)
                         .map(JsonElement::getAsString);
             }
         };
